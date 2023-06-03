@@ -66,13 +66,15 @@ else
   ./configure && make
 fi
 
-# Add GAP alias to bashrc file
-echo 'alias gap="./bin/gap.sh"' >> ~/.bashrc
-
-# Add GAP binary path to PATH variable
-echo 'export PATH="$PATH:'$(pwd)'/bin"' >> ~/.bashrc
-
-# Reload the bashrc file
-source ~/.bashrc
+# Add GAP alias to the appropriate shell configuration file
+if [ "$os_type" == "linux" ]; then
+  echo 'alias gap="./bin/gap.sh"' >> ~/.bashrc
+  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> ~/.bashrc
+  source ~/.bashrc
+elif [ "$os_type" == "macos" ]; then
+  echo 'alias gap="./bin/gap.sh"' >> ~/.bash_profile
+  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> ~/.bash_profile
+  source ~/.bash_profile
+fi
 
 echo "Installation completed. You can now call 'gap' from any directory."
