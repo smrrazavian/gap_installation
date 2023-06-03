@@ -51,10 +51,13 @@ configure_and_make_gap() {
 
 # Function to add GAP alias and binary path to shell configuration file
 add_gap_alias_to_shell() {
+  echo "Adding GAP alias and binary path to shell configuration file..."
   echo 'alias gap="./bin/gap.sh"' >> "$shell_config_file"
-  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> "$shell_config_file"
-  source "$shell_config_file"
+  echo 'export PATH="$PATH:'"$gap_path"'/bin"' >> "$shell_config_file"
 }
+
+# Set the shell configuration file path
+shell_config_file=""
 
 # Check the operating system
 os=$(uname -s)
@@ -62,13 +65,13 @@ case "$os" in
   Linux*)
     echo "Detected Linux-based OS"
     os_type="linux"
-    shell_config_file="$HOME/.bashrc"
+    shell_config_file="$HOME/.bashrc"  # Update with your desired path
     install_dependencies_linux
     ;;
   Darwin*)
     echo "Detected macOS"
     os_type="macos"
-    shell_config_file="$HOME/.bash_profile"
+    shell_config_file="$HOME/.bash_profile"  # Update with your desired path
     install_dependencies_macos
     ;;
   *)
@@ -83,10 +86,16 @@ download_gap
 # Extract GAP archive
 extract_gap
 
+# Store current directory path
+gap_path=$(pwd)
+
 # Configure and make GAP
 configure_and_make_gap
 
 # Add GAP alias and binary path to shell configuration file
 add_gap_alias_to_shell
+
+# Reload the shell configuration file
+source "$shell_config_file"
 
 echo "Installation completed. You can now call 'gap' from any directory."
