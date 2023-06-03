@@ -1,20 +1,24 @@
 #!/bin/bash
 
+# Prompt for the user's password
+read -sp "Enter your password: " password
+echo
+
 # Check if GAP is already downloaded
 if [ ! -f gap-4.12.2.tar.gz ]; then
     echo "Downloading GAP..."
-    wget --progress=bar:force https://github.com/gap-system/gap/releases/download/v4.12.2/gap-4.12.2.tar.gz
+    echo "$password" | sudo -S wget --progress=bar:force https://github.com/gap-system/gap/releases/download/v4.12.2/gap-4.12.2.tar.gz
 fi
 
 # Extract the downloaded archive
-tar -xf gap-4.12.2.tar.gz
+echo "$password" | sudo -S tar -xf gap-4.12.2.tar.gz
 
 # Change to the extracted directory
 cd gap-4.12.2
 
 # Update package lists and install required dependencies
-sudo apt update
-sudo apt-get install -y build-essential autoconf libtool libgmp-dev libreadline-dev zlib1g-dev
+echo "$password" | sudo -S apt update
+echo "$password" | sudo -S apt-get install -y build-essential autoconf libtool libgmp-dev libreadline-dev zlib1g-dev
 
 # Run the configure script and make
 ./configure
