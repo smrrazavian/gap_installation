@@ -9,6 +9,53 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+# Function to install dependencies on Linux
+install_dependencies_linux() {
+  echo "$password" | sudo -S apt update
+  echo "$password" | sudo -S apt-get install -y build-essential autoconf libtool libgmp-dev libreadline-dev zlib1g-dev
+}
+
+# Function to install dependencies on macOS
+install_dependencies_macos() {
+  if ! command_exists brew; then
+    echo "Homebrew is not installed. Installing Homebrew..."
+    echo "$password" | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+  echo "$password" | brew install gmp readline
+}
+
+# Function to download GAP archive
+download_gap() {
+  if [ ! -f gap-4.12.2.tar.gz ]; then
+    echo "Downloading GAP..."
+    wget --progress=bar:force https://github.com/gap-system/gap/releases/download/v4.12.2/gap-4.12.2.tar.gz
+  fi
+}
+
+# Function to extract GAP archive
+extract_gap() {
+  if [ ! -d gap-4.12.2 ]; then
+    tar -xf gap-4.12.2.tar.gz
+  fi
+}
+
+# Function to configure and make GAP
+configure_and_make_gap() {
+  cd gap-4.12.2
+  configure_cmd="./configure"
+  if [ "$os_type" == "macos" ]; then
+    configure_cmd+=" --with-gmp=$(brew --prefix) --with-readline=$(brew --prefix)/opt/readline"
+  fi
+  $configure_cmd && make
+}
+
+# Function to add GAP alias and binary path to shell configuration file
+add_gap_alias_to_shell() {
+  echo 'alias gap="./bin/gap.sh"' >> "$shell_config_file"
+  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> "$shell_config_file"
+  source "$shell_config_file"
+}
+
 # Check the operating system
 os=$(uname -s)
 case "$os" in
@@ -16,11 +63,13 @@ case "$os" in
     echo "Detected Linux-based OS"
     os_type="linux"
     shell_config_file="$HOME/.bashrc"
+    install_dependencies_linux
     ;;
   Darwin*)
     echo "Detected macOS"
     os_type="macos"
     shell_config_file="$HOME/.bash_profile"
+    install_dependencies_macos
     ;;
   *)
     echo "Unsupported operating system: $os"
@@ -28,51 +77,16 @@ case "$os" in
     ;;
 esac
 
-# Install dependencies based on the operating system
-if [ "$os_type" == "linux" ]; then
-  # Update package lists
-  echo "$password" | sudo -S apt update
-  
-  # Install required dependencies
-  echo "$password" | sudo -S apt-get install -y build-essential autoconf libtool libgmp-dev libreadline-dev zlib1g-dev
-elif [ "$os_type" == "macos" ]; then
-  # Check if Homebrew is installed
-  if ! command_exists brew; then
-    echo "Homebrew is not installed. Installing Homebrew..."
-    echo "$password" | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  fi
-  
-  # Install required dependencies with Homebrew
-  echo "$password" | brew install gmp readline
-else
-  echo "Unsupported operating system: $os_type"
-  exit 1
-fi
+# Download GAP archive
+download_gap
 
-# Check if GAP is already downloaded
-if [ ! -f gap-4.12.2.tar.gz ]; then
-  echo "Downloading GAP..."
-  wget --progress=bar:force https://github.com/gap-system/gap/releases/download/v4.12.2/gap-4.12.2.tar.gz
-fi
-
-# Extract the downloaded archive
-tar -xf gap-4.12.2.tar.gz
-
-# Change to the extracted directory
-cd gap-4.12.2
+# Extract GAP archive
+extract_gap
 
 # Configure and make GAP
-configure_cmd="./configure"
-if [ "$os_type" == "macos" ]; then
-  configure_cmd+=" --with-gmp=$(brew --prefix) --with-readline=$(brew --prefix)/opt/readline"
-fi
-$configure_cmd && make
+configure_and_make_gap
 
-# Add GAP alias and binary path to the appropriate shell configuration file
-echo 'alias gap="./bin/gap.sh"' >> "$shell_config_file"
-echo 'export PATH="$PATH:'$(pwd)'/bin"' >> "$shell_config_file"
-
-# Reload the shell configuration file
-source "$shell_config_file"
+# Add GAP alias and binary path to shell configuration file
+add_gap_alias_to_shell
 
 echo "Installation completed. You can now call 'gap' from any directory."
