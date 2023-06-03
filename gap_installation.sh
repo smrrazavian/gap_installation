@@ -15,10 +15,12 @@ case "$os" in
   Linux*)
     echo "Detected Linux-based OS"
     os_type="linux"
+    shell_config_file="$HOME/.bashrc"
     ;;
   Darwin*)
     echo "Detected macOS"
     os_type="macos"
+    shell_config_file="$HOME/.bash_profile"
     ;;
   *)
     echo "Unsupported operating system: $os"
@@ -60,21 +62,17 @@ tar -xf gap-4.12.2.tar.gz
 cd gap-4.12.2
 
 # Configure and make GAP
+configure_cmd="./configure"
 if [ "$os_type" == "macos" ]; then
-  ./configure --with-gmp=$(brew --prefix) --with-readline=$(brew --prefix)/opt/readline && make
-else
-  ./configure && make
+  configure_cmd+=" --with-gmp=$(brew --prefix) --with-readline=$(brew --prefix)/opt/readline"
 fi
+$configure_cmd && make
 
-# Add GAP alias to the appropriate shell configuration file
-if [ "$os_type" == "linux" ]; then
-  echo 'alias gap="./bin/gap.sh"' >> ~/.bashrc
-  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> ~/.bashrc
-  source ~/.bashrc
-elif [ "$os_type" == "macos" ]; then
-  echo 'alias gap="./bin/gap.sh"' >> ~/.bash_profile
-  echo 'export PATH="$PATH:'$(pwd)'/bin"' >> ~/.bash_profile
-  source ~/.bash_profile
-fi
+# Add GAP alias and binary path to the appropriate shell configuration file
+echo 'alias gap="./bin/gap.sh"' >> "$shell_config_file"
+echo 'export PATH="$PATH:'$(pwd)'/bin"' >> "$shell_config_file"
+
+# Reload the shell configuration file
+source "$shell_config_file"
 
 echo "Installation completed. You can now call 'gap' from any directory."
