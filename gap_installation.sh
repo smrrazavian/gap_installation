@@ -51,6 +51,7 @@ configure_and_make_gap() {
 
 # Function to add GAP alias and binary path to shell configuration file
 add_gap_alias_to_shell() {
+  cd gap-4.12.2
   echo "Adding GAP alias and binary path to shell configuration file..."
   echo "alias gap='$gap_path/bin/gap.sh'" >> "$shell_config_file"
   echo "export PATH=\"\$PATH:$gap_path/bin\"" >> "$shell_config_file"
